@@ -86,7 +86,7 @@ get_age_group_life_expectancy <- function(age_range, life_table) {
 # Importing data #
 ##################
 
-life_table_var_names <- c("M_age", "M_age_group_mortality_rate", "M_mortality_within_1year", "M_survivors_from100k_births", "M_deaths_from_100k_births", "M_life_expectancy_at_age", "empty",
+UK_life_table_var_names <- c("M_age", "M_age_group_mortality_rate", "M_mortality_within_1year", "M_survivors_from100k_births", "M_deaths_from_100k_births", "M_life_expectancy_at_age", "empty",
                           "F_age", "F_age_group_mortality_rate", "F_mortality_within_1year", "F_survivors_from100k_births", "F_deaths_from_100k_births", "F_life_expectancy_at_age")
 
 UK_covid_deaths_var_names <- c("age_group", "M_population", "M_pop_percentage", "F_population", "F_pop_percentage", "both_popultaion", "both_pop_percentage",
@@ -96,7 +96,7 @@ UK_life_table_raw <- rio::import(UK_life_tables_link,
                                  format = "xlsx",
                                  which = "2018-2020",
                                  skip = 5,
-                                 .name_repair = ~ life_table_var_names)
+                                 .name_repair = ~ UK_life_table_var_names)
 
 UK_covid_deaths_raw <- rio::import(UK_covid_deaths_link,
                                  format = "xlsx",
