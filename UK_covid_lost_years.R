@@ -30,7 +30,6 @@ if (!require("pacman", quietly = TRUE)) install.packages("pacman")
 pacman::p_load(magrittr,
                dplyr,
                tidyr,
-               stringr,
                purrr,
                readxl,
                rio)
@@ -71,7 +70,7 @@ get_age_group_name <- function(age_range) {
   range_end <- age_range[length(age_range)]
   
   if (length(age_range) == 1) return (as.character(range_start))
-  return (stringr::str_glue("{range_start}-{range_end}"))
+  return (paste(range_start, range_end, sep = "-"))
 }
 
 get_age_group_life_expectancy <- function(age_range, life_table) {
@@ -97,7 +96,7 @@ UK_life_table_raw <- rio::import(UK_life_tables_link,
                                  format = "xlsx",
                                  which = "2018-2020",
                                  skip = 5,
-                                 .name_repair = ~life_table_var_names)
+                                 .name_repair = ~ life_table_var_names)
 
 UK_covid_deaths_raw <- rio::import(UK_covid_deaths_link,
                                  format = "xlsx",
