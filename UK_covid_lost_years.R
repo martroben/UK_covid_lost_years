@@ -4,7 +4,11 @@
 ##  Script name: UK_covid_lost_years.R                                                               ##
 ##  Purpose of script: Calculate average years unlived by a UK person who died of covid.             ##
 ##                     (Possible higher prevalence of co-morbidities in people who died of covid     ##
-##                     is not controlled for.)                                                       ##
+##                                                                                                   ##
+##  Notes: Possible higher prevalence of co-morbidities in people who died of covid                  ##
+##           is not controlled for                                                                   ##
+##         Life expectancy used in the current period life expectancy                                ##
+##           future rise in life expectancies is not modelled                                        ##
 ##                                                                                                   ##
 ##  Author: Mart Roben                                                                               ##
 ##  Date Created: 5. Jan 2022                                                                        ##
@@ -25,6 +29,7 @@ if (!require("pacman", quietly = TRUE)) install.packages("pacman")
 
 pacman::p_load(magrittr,
                dplyr,
+               tidyr,
                stringr,
                purrr,
                readxl,
@@ -47,6 +52,18 @@ UK_covid_deaths_link <- "https://www.ined.fr/fichier/rte/166/Page%20Data/England
 #############
 # Functions #
 #############
+
+get_age_groups <- function(ages, age_groups_list) {
+
+  get_one_age_group <- function(age, age_groups_list) {
+    age_groups_list %>%
+      purrr::map_lgl(~(age %in% .x)) %>%
+      which() %>%
+      purrr::pluck(age_groups_list, .)
+  }
+  
+  ages %>% purrr::map(get_one_age_group, age_groups_list)
+}
 
 get_age_group_name <- function(age_range) {
   
@@ -96,8 +113,8 @@ UK_covid_deaths_raw <- rio::import(UK_covid_deaths_link,
 
 life_table <- UK_life_table_raw %>%
   dplyr::select(M_age, M_life_expectancy_at_age, F_life_expectancy_at_age) %>%
-  dplyr::rename(age = M_age) %>%
-  tibble::tibble()
+  dplyr::rename(age = M_age, male = M_life_expectancy_at_age, female = F_life_expectancy_at_age) %>%
+  tidyr::pivot_longer(cols = c("male", "female"), names_to = "sex", values_to = "life_expectancy")
 
 age_groups <- list(0,
                    1:4,
@@ -120,9 +137,11 @@ age_groups <- list(0,
                    85:89,
                    90:100)
 
-life_expectancy_by_age_group <- age_groups %>%
-  purrr::map_dfr(~tibble::tibble(age_group = get_age_group_name(.x)) %>% dplyr::bind_cols(get_age_group_life_expectancy(.x, life_table))) %>%
-  dplyr::mutate(age_group = dplyr::case_when(age_group == "90-100" ~ stringr::str_glue("90+"), TRUE ~ age_group))
+life_expectancy_by_age_group <- life_table %>%
+  dplyr::mutate(age_group = get_age_groups(age, age_groups) %>% purrr::map_chr(get_age_group_name)) %>%
+  dplyr::group_by(age_group, sex) %>%
+  dplyr::summarise(age_group = unique(age_group), sex = unique(sex), life_expectancy = mean(life_expectancy), .groups = "drop") %>%
+  dplyr::mutate(age_group = dplyr::case_when(age_group == "90-100" ~ "90+", TRUE ~ age_group))
   # assume that life expectancy for 90+ group is the same as life expectancy for 90-100 group
 
 covid_death_totals <- UK_covid_deaths_raw %>%
@@ -131,11 +150,12 @@ covid_death_totals <- UK_covid_deaths_raw %>%
 
 covid_deaths <- UK_covid_deaths_raw %>%
   dplyr::select(age_group, M_covid_cumulative_deaths, F_covid_cumulative_deaths) %>%
-  dplyr::mutate(M_deaths_proportion = M_covid_cumulative_deaths / covid_death_totals$both,
-                F_deaths_proportion = F_covid_cumulative_deaths / covid_death_totals$both) %>%
-  dplyr::inner_join(life_expectancy_by_age_group, by = "age_group")
+  dplyr::rename(male = M_covid_cumulative_deaths, female = F_covid_cumulative_deaths) %>%
+  tidyr::pivot_longer(cols = c("male", "female"), names_to = "sex", values_to = "cumulative_deaths") %>%
+  dplyr::mutate(deaths_proportion = cumulative_deaths / covid_death_totals$both) %>%
+  dplyr::inner_join(life_expectancy_by_age_group, by = c("age_group", "sex"))
 
 # % of covid deaths occurred in a certain age group * life expectancy for this age group
-avg_lost_years <- sum(covid_deaths$M_life_expectancy * covid_deaths$M_deaths_proportion) + sum(covid_deaths$F_life_expectancy * covid_deaths$F_deaths_proportion)
+avg_lost_years <- sum(covid_deaths$life_expectancy * covid_deaths$deaths_proportion)
 
 # [5. Jan 2022] avg_lost_years result: 10.54055
