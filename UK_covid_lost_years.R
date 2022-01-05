@@ -73,13 +73,6 @@ get_age_group_name <- function(age_range) {
   return (paste(range_start, range_end, sep = "-"))
 }
 
-get_age_group_life_expectancy <- function(age_range, life_table) {
-  
-  life_table %>%
-    dplyr::filter(age %in% age_range) %>%
-    dplyr::summarise(M_life_expectancy = mean(M_life_expectancy_at_age), F_life_expectancy = mean(F_life_expectancy_at_age))
-}
-
 
 
 ##################
