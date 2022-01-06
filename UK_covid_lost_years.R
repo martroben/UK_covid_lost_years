@@ -3,7 +3,6 @@
 ##                                                                                                   ##
 ##  Script name: UK_covid_lost_years.R                                                               ##
 ##  Purpose of script: Calculate average years unlived by a UK person who died of covid.             ##
-##                     (Possible higher prevalence of co-morbidities in people who died of covid     ##
 ##                                                                                                   ##
 ##  Notes: Possible higher prevalence of co-morbidities in people who died of covid                  ##
 ##           is not controlled for                                                                   ##
