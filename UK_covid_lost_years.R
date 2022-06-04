@@ -6,7 +6,7 @@
 ##                                                                                                   ##
 ##  Notes: Possible higher prevalence of co-morbidities in people who died of covid                  ##
 ##           is not controlled for                                                                   ##
-##         Life expectancy used in the current period life expectancy                                ##
+##         Life expectancy used is the current period life expectancy                                ##
 ##           future rise in life expectancies is not modelled                                        ##
 ##                                                                                                   ##
 ##  Author: Mart Roben                                                                               ##
